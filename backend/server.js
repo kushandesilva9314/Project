@@ -8,8 +8,8 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 
-
-
+const postRoutes = require("./routes/post");
+const imageRoutes = require("./routes/company_images");
 const ProfilePicture = require("./models/profile");
 const profilePictureRoutes = require("./routes/profilePicture"); 
 const authRoutes = require("./routes/auth");
@@ -421,7 +421,8 @@ app.use("/api/content", contentRoutes);
 app.use("/api", marketNewsRoutes);
 app.use("/api/profile-picture", profilePictureRoutes);
 app.use("/api", companyLoginRoutes);
-
+app.use("/api", imageRoutes);
+app.use("/api/posts", postRoutes);
 /* ------------------------------------------
 ✅ Start Server
 ------------------------------------------ */
