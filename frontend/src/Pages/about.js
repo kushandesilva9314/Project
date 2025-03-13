@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion';
+
 import Navbar from './components/navbar';
 import Footer from './components/footer';
 import AboutImage from './Assets/abt.jpg';
-
+import { motion } from 'framer-motion';
 const AboutUs = () => {
     return (
         <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-300 to-blue-300">

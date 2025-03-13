@@ -54,7 +54,7 @@ const CompanyProfileButton = () => {
                 <Link to="/sales">Sales Management</Link>
               </li>
               <li className="px-3 py-2 text-sm hover:bg-blue-100 cursor-pointer rounded-md">
-                <Link to="/ads">Ads Management</Link>
+                <Link to="/ads_management">Ads Management</Link>
               </li>
               <li
                 onClick={handleLogout}

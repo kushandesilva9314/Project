@@ -7,7 +7,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
-
+const adsRoutes = require("./routes/ads");
 const postRoutes = require("./routes/post");
 const imageRoutes = require("./routes/company_images");
 const ProfilePicture = require("./models/profile");
@@ -423,6 +423,8 @@ app.use("/api/profile-picture", profilePictureRoutes);
 app.use("/api", companyLoginRoutes);
 app.use("/api", imageRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api", adsRoutes); 
+
 /* ------------------------------------------
 ✅ Start Server
 ------------------------------------------ */

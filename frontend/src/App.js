@@ -16,6 +16,7 @@ import News from './Pages/news';
 import Profile from './Pages/profile';
 import Company from './Pages/company';
 import Com_Man from './Pages/profile_management';
+import Ads_Man from './Pages/ads_management';
 function App() {
   return (
     <div className="App">
@@ -36,6 +37,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/company" element={<Company />} />
           <Route path="/company_management" element={<Com_Man />} />
+          <Route path="/ads_management" element={<Ads_Man />} />
         </Routes>
       </BrowserRouter>
     </div>
