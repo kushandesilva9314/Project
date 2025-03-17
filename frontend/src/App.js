@@ -17,6 +17,7 @@ import Profile from './Pages/profile';
 import Company from './Pages/company';
 import Com_Man from './Pages/profile_management';
 import Ads_Man from './Pages/ads_management';
+import Ads from './Pages/ads'
 function App() {
   return (
     <div className="App">
@@ -38,6 +39,7 @@ function App() {
           <Route path="/company" element={<Company />} />
           <Route path="/company_management" element={<Com_Man />} />
           <Route path="/ads_management" element={<Ads_Man />} />
+          <Route path="/ads" element={<Ads/>} />
         </Routes>
       </BrowserRouter>
     </div>

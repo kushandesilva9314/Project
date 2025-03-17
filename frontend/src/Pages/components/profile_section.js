@@ -4,26 +4,35 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import CompanyProfileButton from "./company_profile_button";
 
-const ProfileSection = ({ coverPhoto, profilePhoto }) => {
+const ProfileSection = () => {
   const [isCompany, setIsCompany] = useState(false);
   const [businessName, setBusinessName] = useState("");
+  const [coverPhoto, setCoverPhoto] = useState(null);
+  const [profilePhoto, setProfilePhoto] = useState(null);
 
   useEffect(() => {
-    const fetchCompanyStatus = async () => {
+    const fetchUserData = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/company/protected", {
+        const companyResponse = await axios.get("http://localhost:3001/api/company/protected", {
           withCredentials: true,
         });
-        if (response.data?.user?.role === "company") {
+        if (companyResponse.data?.user?.role === "company") {
           setIsCompany(true);
-          setBusinessName(response.data.user.companyName || "Business Name");
+          setBusinessName(companyResponse.data.user.companyName || "Business Name");
         }
+
+        const imagesResponse = await axios.get("http://localhost:3001/api/company/images/user/images", {
+          withCredentials: true,
+        });
+
+        setCoverPhoto(imagesResponse.data.cover ? `http://localhost:3001${imagesResponse.data.cover}` : null);
+        setProfilePhoto(imagesResponse.data.profile ? `http://localhost:3001${imagesResponse.data.profile}` : null);
       } catch (error) {
-        console.error("Error checking company status:", error);
+        console.error("Error fetching user data:", error);
       }
     };
 
-    fetchCompanyStatus();
+    fetchUserData();
   }, []);
 
   return (
@@ -36,11 +45,10 @@ const ProfileSection = ({ coverPhoto, profilePhoto }) => {
         transition={{ duration: 0.5 }}
       >
         {coverPhoto ? (
-          <motion.img
+          <img
             src={coverPhoto}
             alt="Cover"
             className="w-full h-full object-cover"
-            whileHover={{ scale: 1.05 }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">

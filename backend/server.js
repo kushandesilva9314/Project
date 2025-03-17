@@ -24,6 +24,9 @@ const contentRoutes = require("./routes/content");
 const Content = require("./models/content");
 const marketNewsRoutes = require("./routes/marketNews");
 const companyLoginRoutes = require("./routes/company_login");
+const fetchImagesRoute = require("./routes/fetch_images");
+const FetchPostRoutes = require("./routes/fetch_post");
+const FetchAdRoutes = require("./routes/fetch_ad");
 
 
 const sessionSecret = process.env.SESSION_SECRET;
@@ -40,10 +43,10 @@ const app = express();
 
 app.use(cookieParser()); 
 app.use(session({
-  secret: sessionSecret, // Ensure this is defined in your .env file
+  secret: sessionSecret, 
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // Set to `true` only if using HTTPS
+  cookie: { secure: false } 
 }));
 
 
@@ -424,7 +427,9 @@ app.use("/api", companyLoginRoutes);
 app.use("/api", imageRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api", adsRoutes); 
-
+app.use("/api/company/images", fetchImagesRoute);
+app.use("/api", FetchPostRoutes);
+app.use("/api/ads", FetchAdRoutes);
 /* ------------------------------------------
 ✅ Start Server
 ------------------------------------------ */

@@ -44,7 +44,7 @@ function Home() {
         <Banner />
         <Service />
         <SliderComponent />
-        <Reviews />
+       {/*  <Reviews /> */}
       </main>
       <Footer />
     </div>
