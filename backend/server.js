@@ -11,7 +11,7 @@ const adsRoutes = require("./routes/ads");
 const postRoutes = require("./routes/post");
 const imageRoutes = require("./routes/company_images");
 const ProfilePicture = require("./models/profile");
-const profilePictureRoutes = require("./routes/profilePicture"); 
+const profilePictureRoutes = require("./routes/profilePicture");
 const authRoutes = require("./routes/auth");
 const companyRoutes = require("./routes/company");
 const PendingUser = require("./models/pending_user");
@@ -26,13 +26,14 @@ const marketNewsRoutes = require("./routes/marketNews");
 const companyLoginRoutes = require("./routes/company_login");
 const fetchImagesRoute = require("./routes/fetch_images");
 const FetchPostRoutes = require("./routes/fetch_post");
-const FetchAdRoutes = require("./routes/fetch_ad");
+const PublicAdRoutes = require("./routes/fetch_ad");
+const salesRoutes = require('./routes/sales');
 
 
 const sessionSecret = process.env.SESSION_SECRET;
-  if (!sessionSecret) {
-    throw new Error("❌ Missing SESSION_SECRET in environment variables.");
-  }
+if (!sessionSecret) {
+  throw new Error("❌ Missing SESSION_SECRET in environment variables.");
+}
 
 const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) {
@@ -41,29 +42,27 @@ if (!jwtSecret) {
 
 const app = express();
 
-app.use(cookieParser()); 
-app.use(session({
-  secret: sessionSecret, 
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } 
-}));
-
+app.use(cookieParser());
+app.use(
+  session({
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false },
+  })
+);
 
 // Middleware
 app.use(
   cors({
     origin: "http://localhost:3000",
-    credentials: true, 
+    credentials: true,
   })
 );
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-
 
 // ✅ Connect to MongoDB
 mongoose
@@ -94,7 +93,9 @@ app.get("/api/pending-organizations", async (req, res) => {
 
     if (!pendingOrgs || pendingOrgs.length === 0) {
       console.log("No organizations found.");
-      return res.status(200).json({ message: "No pending organizations", data: [] });
+      return res
+        .status(200)
+        .json({ message: "No pending organizations", data: [] });
     }
 
     res.status(200).json(pendingOrgs);
@@ -103,7 +104,6 @@ app.get("/api/pending-organizations", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 /* ------------------------------------------
 ✅ Fetch a single pending user by ID
@@ -133,8 +133,9 @@ app.get("/api/pending-organizations/:id", async (req, res) => {
     const organization = await PendingOrg.findById(id);
 
     if (!organization) {
-      return res.status(200).json({ message: "Organization not found", data: null });
-
+      return res
+        .status(200)
+        .json({ message: "Organization not found", data: null });
     }
 
     res.status(200).json(organization);
@@ -143,7 +144,6 @@ app.get("/api/pending-organizations/:id", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 /* ------------------------------------------
 ✅ Delete a pending organization
@@ -190,9 +190,9 @@ app.delete("/api/pending-users/:id", async (req, res) => {
 ------------------------------------------ */
 app.get("/api/investors", async (req, res) => {
   try {
-    const investors = await Investor.find({ 
-      role: { $not: { $regex: /^admin$/i } } // Case-insensitive regex
-    }).lean(); 
+    const investors = await Investor.find({
+      role: { $not: { $regex: /^admin$/i } }, // Case-insensitive regex
+    }).lean();
     res.status(200).json(investors);
   } catch (error) {
     console.error("Error fetching investors:", error);
@@ -200,40 +200,44 @@ app.get("/api/investors", async (req, res) => {
   }
 });
 
-
 /* ------------------------------------------
 ✅ Delete an investor and their profile picture (if exists)
 ------------------------------------------ */
 app.delete("/api/investors/:id", async (req, res) => {
   try {
-    
     const investor = await Investor.findById(req.params.id);
-    
+
     if (!investor) {
       return res.status(404).json({ message: "Investor not found" });
     }
 
-  
     if (investor.role === "admin") {
-      return res.status(403).json({ message: "Admin accounts cannot be deleted" });
+      return res
+        .status(403)
+        .json({ message: "Admin accounts cannot be deleted" });
     }
 
-   
     await Investor.findByIdAndDelete(req.params.id);
 
-   
-    await ProfilePicture.findOneAndDelete({ email: investor.email }).catch((err) => {
-      console.warn("No profile picture found for this investor, skipping deletion.");
-    });
+    await ProfilePicture.findOneAndDelete({ email: investor.email }).catch(
+      (err) => {
+        console.warn(
+          "No profile picture found for this investor, skipping deletion."
+        );
+      }
+    );
 
-    res.status(200).json({ message: "Investor deleted successfully, profile picture (if any) also deleted." });
+    res
+      .status(200)
+      .json({
+        message:
+          "Investor deleted successfully, profile picture (if any) also deleted.",
+      });
   } catch (error) {
     console.error("Error deleting investor:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
-
-
 
 /* ------------------------------------------
 ✅ Fetch all approved organizations
@@ -282,20 +286,19 @@ app.delete("/api/organizations/:id", async (req, res) => {
 
 app.get("/api/slider/all", async (req, res) => {
   try {
-      const contents = await Content.find();
-      const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const contents = await Content.find();
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-      const updatedContents = contents.map(content => ({
-          ...content._doc,
-          image: content.image ? `${baseUrl}${content.image}` : null, 
-      }));
+    const updatedContents = contents.map((content) => ({
+      ...content._doc,
+      image: content.image ? `${baseUrl}${content.image}` : null,
+    }));
 
-      res.status(200).json(updatedContents);
+    res.status(200).json(updatedContents);
   } catch (error) {
-      console.error("Error fetching content:", error);
-      res.status(500).json({ message: "Server error" });
+    console.error("Error fetching content:", error);
+    res.status(500).json({ message: "Server error" });
   }
-
 });
 
 app.post("/api/login", async (req, res) => {
@@ -321,11 +324,11 @@ app.post("/api/login", async (req, res) => {
 
     // ✅ Ensure `username` is included in the JWT
     const token = jwt.sign(
-      { 
-        id: user._id, 
-        role: user.role, 
-        username: user.username, 
-        email: user.email 
+      {
+        id: user._id,
+        role: user.role,
+        username: user.username,
+        email: user.email,
       },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
@@ -363,13 +366,14 @@ app.get("/api/protected", (req, res) => {
 
     res.json({
       message: "Protected content",
-      user: { username: decoded.username, email: decoded.email, role: decoded.role },
+      user: {
+        username: decoded.username,
+        email: decoded.email,
+        role: decoded.role,
+      },
     });
   });
 });
-
-
-
 
 app.post("/api/logout", (req, res) => {
   req.session.destroy((err) => {
@@ -377,7 +381,6 @@ app.post("/api/logout", (req, res) => {
       return res.status(500).json({ message: "Logout failed" });
     }
 
-    
     res.clearCookie("token", {
       httpOnly: true,
       secure: false,
@@ -387,7 +390,6 @@ app.post("/api/logout", (req, res) => {
     res.json({ message: "Logged out successfully" });
   });
 });
-
 
 app.get("/api/profile", async (req, res) => {
   try {
@@ -412,7 +414,6 @@ app.get("/api/profile", async (req, res) => {
   }
 });
 
-
 /* ------------------------------------------
 ✅ Import Other Routes
 ------------------------------------------ */
@@ -426,10 +427,11 @@ app.use("/api/profile-picture", profilePictureRoutes);
 app.use("/api", companyLoginRoutes);
 app.use("/api", imageRoutes);
 app.use("/api/posts", postRoutes);
-app.use("/api", adsRoutes); 
+app.use("/api", adsRoutes);
 app.use("/api/company/images", fetchImagesRoute);
 app.use("/api", FetchPostRoutes);
-app.use("/api/ads", FetchAdRoutes);
+app.use("/api", PublicAdRoutes);
+app.use('/api/sales', salesRoutes);
 /* ------------------------------------------
 ✅ Start Server
 ------------------------------------------ */

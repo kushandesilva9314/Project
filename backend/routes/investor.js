@@ -1,6 +1,7 @@
 const express = require("express");
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
+const mongoose = require("mongoose");
 const PendingUser = require("../models/pending_user");
 const Investor = require("../models/investors");
 
@@ -8,6 +9,7 @@ dotenv.config();
 
 const router = express.Router();
 
+// Email transporter configuration
 const transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
@@ -16,15 +18,27 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-
 router.post("/approve/:id", async (req, res) => {
     try {
-        const pendingInvestor = await PendingUser.findById(req.params.id);
+        const investorId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(investorId)) {
+            console.error("Invalid ObjectId:", investorId);
+            return res.status(400).json({ message: "Invalid investor ID format" });
+        }
+
+        console.log("Attempting to approve investor with ID:", investorId);
+
+        // Fetch pending investor
+        const pendingInvestor = await PendingUser.findById(investorId);
         if (!pendingInvestor) {
+            console.error("Investor not found with ID:", investorId);
             return res.status(404).json({ message: "Investor not found" });
         }
 
-       
+        console.log("Pending investor found:", pendingInvestor);
+
+        // Create new Investor entry
         const newInvestor = new Investor({
             fullName: pendingInvestor.fullName,
             email: pendingInvestor.email,
@@ -36,10 +50,14 @@ router.post("/approve/:id", async (req, res) => {
             governmentId: pendingInvestor.governmentId
         });
 
+        console.log("Saving new investor...");
         await newInvestor.save();
-        await PendingUser.findByIdAndDelete(req.params.id);
 
-       
+        // Delete from PendingUser collection
+        await PendingUser.findByIdAndDelete(investorId);
+        console.log("Deleted pending investor with ID:", investorId);
+
+        // Send approval email
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: pendingInvestor.email,
@@ -50,20 +68,22 @@ router.post("/approve/:id", async (req, res) => {
                 <p>You can now log in to your account and start investing.</p>
                 <p><a href="http://localhost:3000/login">Login Here</a></p>
                 <p>Best Regards, <br> Investo Team</p>
-            `
+            `,
         };
 
         try {
             await transporter.sendMail(mailOptions);
+            console.log("Approval email sent to:", pendingInvestor.email);
         } catch (emailError) {
-            console.error("Email sending failed:", emailError);
+            console.error("Error sending email:", emailError);
             return res.status(500).json({ message: "Investor approved, but email failed to send" });
         }
 
         res.status(200).json({ message: "Investor approved successfully and email sent" });
+
     } catch (error) {
-        console.error("Error approving investor:", error);
-        res.status(500).json({ message: "Server error" });
+        console.error("Error approving investor:", error.message);
+        res.status(500).json({ message: "Internal server error" });
     }
 });
 

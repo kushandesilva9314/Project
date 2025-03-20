@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaHome, FaEye, FaTrashAlt } from "react-icons/fa";
+import { FaHome, FaEye, FaTrashAlt, FaTimes } from "react-icons/fa";
 import logo from "../Pages/Assets/logo.png";
 
 const API_BASE_URL = "http://localhost:3001/api/ads";
@@ -166,7 +166,26 @@ const AdsPage = () => {
           </table>
         </div>
       </div>
+
+      {/* Popup Modal */}
+      {selectedAd && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
+              onClick={() => setSelectedAd(null)}
+            >
+              <FaTimes />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Ad Details</h2>
+            <p><strong>Investment:</strong> LKR {selectedAd.investment.toLocaleString()}</p>
+            <p><strong>Percentage:</strong> {selectedAd.percentage}%</p>
+            <p><strong>Description:</strong> {selectedAd.description}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 export default AdsPage;

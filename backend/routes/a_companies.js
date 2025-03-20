@@ -8,6 +8,7 @@ dotenv.config();
 
 const router = express.Router();
 
+// Email transporter configuration
 const transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
@@ -18,11 +19,25 @@ const transporter = nodemailer.createTransport({
 
 router.post("/approve/:id", async (req, res) => {
     try {
-        const pendingOrg = await PendingOrg.findById(req.params.id);
+        const { id } = req.params;
+        console.log(`Attempting to approve organization with ID: ${id}`);
+
+        // Fetch pending organization from database
+        const pendingOrg = await PendingOrg.findById(id);
         if (!pendingOrg) {
+            console.error(`Organization not found with ID: ${id}`);
             return res.status(404).json({ message: "Organization not found" });
         }
 
+        console.log(`Organization found: ${pendingOrg.companyName}`);
+
+        // Validate password presence
+        if (!pendingOrg.password) {
+            console.error("Error: Password is missing in pending organization data.");
+            return res.status(400).json({ message: "Invalid organization data (missing password)" });
+        }
+
+        // Create new Company entry
         const newCompany = new Company({
             companyName: pendingOrg.companyName,
             companyEmail: pendingOrg.companyEmail,
@@ -31,14 +46,19 @@ router.post("/approve/:id", async (req, res) => {
             businessType: pendingOrg.businessType,
             companyDescription: pendingOrg.companyDescription,
             registrationCopy: pendingOrg.registrationCopy,
-            password: pendingOrg.password,  
+            password: pendingOrg.password,  // Ensure password is stored correctly
             role: pendingOrg.role
         });
 
+        // Save new company in database
         await newCompany.save();
-        await PendingOrg.findByIdAndDelete(req.params.id);
+        console.log(`New company registered: ${newCompany.companyName}`);
 
-        // Send email
+        // Delete pending organization record
+        await PendingOrg.findByIdAndDelete(id);
+        console.log(`Deleted pending organization with ID: ${id}`);
+
+        // Email notification
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: pendingOrg.companyEmail,
@@ -49,20 +69,22 @@ router.post("/approve/:id", async (req, res) => {
                 <p>You can now log in to your account.</p>
                 <p><a href="http://localhost:3000/login">Login Here</a></p>
                 <p>Best Regards, <br> Investo Team</p>
-            `
+            `,
         };
 
         try {
             await transporter.sendMail(mailOptions);
+            console.log(`Approval email sent to: ${pendingOrg.companyEmail}`);
         } catch (emailError) {
             console.error("Email sending failed:", emailError);
             return res.status(500).json({ message: "Company approved, but email failed to send" });
         }
 
         res.status(200).json({ message: "Company approved successfully and email sent" });
+
     } catch (error) {
-        console.error("Error approving company:", error);
-        res.status(500).json({ message: "Server error" });
+        console.error("Error approving company:", error.message);
+        res.status(500).json({ message: "Internal server error" });
     }
 });
 
