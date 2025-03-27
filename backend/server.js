@@ -28,7 +28,7 @@ const fetchImagesRoute = require("./routes/fetch_images");
 const FetchPostRoutes = require("./routes/fetch_post");
 const PublicAdRoutes = require("./routes/fetch_ad");
 const salesRoutes = require('./routes/sales');
-
+const predictionRoutes = require('./routes/prediction');
 
 const sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
@@ -432,6 +432,7 @@ app.use("/api/company/images", fetchImagesRoute);
 app.use("/api", FetchPostRoutes);
 app.use("/api", PublicAdRoutes);
 app.use('/api/sales', salesRoutes);
+app.use('/api/predict', predictionRoutes);
 /* ------------------------------------------
 ✅ Start Server
 ------------------------------------------ */
